@@ -1,25 +1,549 @@
 <!doctype html>
-<html lang="ckb" dir="rtl">
+<html lang="ckb" dir="rtl" data-ui="ku">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AgroScope Kurdistan</title>
+<title>AgroScope Kurdistan — ئاو، وشکەساڵی، بەروبووم و پێشبینی بۆ کێڵگەکەت</title>
+<script>
+  // language before the first paint: ?lang=en|ku, then the visitor's last choice, otherwise Kurdish
+  (function () {
+    var l = "ku";
+    try {
+      var q = new URLSearchParams(location.search).get("lang");
+      if (q === "en" || q === "ku") l = q;
+      else { var s = localStorage.getItem("agroscope-lang"); if (s === "en" || s === "ku") l = s; }
+    } catch (e) {}
+    var r = document.documentElement;
+    r.setAttribute("data-ui", l); r.lang = l === "ku" ? "ckb" : "en"; r.dir = l === "ku" ? "rtl" : "ltr";
+    if (l === "en") document.title = "AgroScope Kurdistan — water, drought, crops and forecasts for your farm";
+  })();
+</script>
+<meta name="description" content="AgroScope Kurdistan: بەرنامەیەکی بەخۆڕایی Windows بۆ جووتیاران و ئەندازیارانی کشتوکاڵی هەرێمی کوردستان — ئاو، وشکەساڵی، بەروبووم و پێشبینی بۆ کێڵگەکەت. A free Windows program with water, drought, crop and forecast maps for any farm in the Kurdistan Region, in Kurdish and English. By Kaifi Chomani.">
+<meta property="og:title" content="AgroScope Kurdistan">
+<meta property="og:description" content="ئاو، وشکەساڵی، بەروبووم و پێشبینی بۆ کێڵگەکەت — Water, drought, crops and forecasts for your farm in the Kurdistan Region. Free Windows program, no account.">
+<meta property="og:image" content="https://agroscope-kurdistan.netlify.app/assets/og.jpg">
+<meta property="og:url" content="https://agroscope-kurdistan.netlify.app/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="assets/favicon-64.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/Vazirmatn-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/Vazirmatn-ExtraBold.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-  body { margin: 0; background: #fff; color: #14283d; font-family: "Segoe UI", Tahoma, sans-serif; line-height: 1.6; }
-  main { max-width: 720px; margin: 64px auto; padding: 0 20px; text-align: center; }
-  img { width: 280px; max-width: 80%; height: auto; }
-  a.dl { display: inline-block; margin-top: 18px; background: #187124; color: #fff; padding: 14px 26px;
-    border-radius: 10px; text-decoration: none; font-weight: 700; }
-  p { margin: 10px 0; }
+  /* Vazirmatn (SIL Open Font License 1.1, assets/fonts/OFL.txt): the program's own typeface, for both languages */
+  @font-face { font-family: "Vazirmatn"; src: url("assets/fonts/Vazirmatn-Regular.woff2") format("woff2");
+    font-weight: 400; font-style: normal; font-display: swap; }
+  @font-face { font-family: "Vazirmatn"; src: url("assets/fonts/Vazirmatn-Medium.woff2") format("woff2");
+    font-weight: 500; font-style: normal; font-display: swap; }
+  @font-face { font-family: "Vazirmatn"; src: url("assets/fonts/Vazirmatn-Bold.woff2") format("woff2");
+    font-weight: 700; font-style: normal; font-display: swap; }
+  @font-face { font-family: "Vazirmatn"; src: url("assets/fonts/Vazirmatn-ExtraBold.woff2") format("woff2");
+    font-weight: 800; font-style: normal; font-display: swap; }
+
+  :root {
+    --paper: #ffffff;
+    --ink: #15293d;          /* text: the logo's navy, softened */
+    --navy: #093159;         /* "Scope" in the logo */
+    --green: #187124;        /* "Agro" in the logo */
+    --green-deep: #0f5519;
+    --sky: #1f6fb2;          /* the satellite ring */
+    --wheat: #e2b22c;        /* the yellow field in the emblem */
+    --muted: #566a7b;
+    --rule: #dce5ea;
+    --tint: #f1f6f2;
+    --wrap: 1160px;
+  }
+  /* one language at a time: the other is in the page but hidden */
+  :root[data-ui="ku"] [data-l="en"], :root[data-ui="en"] [data-l="ku"] { display: none !important; }
+
+  * { box-sizing: border-box; }
+  html { background: var(--paper); -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: "Vazirmatn", "Segoe UI", Tahoma, system-ui, sans-serif;
+    font-size: 17px; line-height: 1.85; -webkit-font-smoothing: antialiased;
+  }
+  :root[data-ui="en"] body { line-height: 1.62; }
+  img { max-width: 100%; height: auto; display: block; }
+  a { color: var(--sky); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  a:hover { color: var(--navy); text-decoration-thickness: 2px; }
+  :focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; border-radius: 3px; }
+  .wrap { max-width: var(--wrap); margin-inline: auto; padding-inline: 28px; }
+  bdi.ltr { direction: ltr; unicode-bidi: isolate; }
+  bdi.ui { direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
+
+  /* ---- top bar ---- */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-block: 22px 8px; }
+  .brand img { width: 248px; height: auto; }
+  .top-end { display: flex; align-items: center; gap: 18px; }
+  .by { font-size: 15px; color: var(--muted); }
+  .by a { color: var(--muted); }
+  .nav { font-size: 15.5px; font-weight: 700; color: var(--navy); text-decoration: none; }
+  .nav:hover { color: var(--green); text-decoration: underline; }
+  .lang {
+    font: inherit; font-size: 15.5px; font-weight: 700; color: var(--green); background: #fff;
+    border: 1.5px solid var(--green); border-radius: 999px; padding: 6px 18px; cursor: pointer; line-height: 1.5;
+  }
+  .lang:hover { background: var(--green); color: #fff; }
+
+  /* ---- hero ---- */
+  .hero { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 56px; align-items: center;
+    padding-block: 34px 70px; }
+  h1 {
+    font-weight: 800; color: var(--navy); margin: 0 0 22px; text-wrap: balance;
+    font-size: clamp(2.05rem, 4.1vw, 3.25rem); line-height: 1.45;
+  }
+  :root[data-ui="en"] h1 { line-height: 1.12; letter-spacing: -0.015em; }
+  .lede { font-size: 19.5px; margin: 0 0 30px; max-width: 36em; }
+  .download {
+    display: inline-flex; align-items: center; gap: 12px; background: var(--green); color: #fff;
+    text-decoration: none; font-weight: 700; font-size: 20px; padding: 15px 30px; border-radius: 12px;
+    box-shadow: 0 10px 24px -14px rgba(24, 113, 36, 0.9);
+  }
+  .download svg { width: 24px; height: 24px; flex: none; }
+  .download:hover { background: var(--green-deep); color: #fff; }
+  .download[aria-disabled="true"] { background: #7c8b84; box-shadow: none; }
+  .meta { margin: 16px 0 0; font-size: 15.5px; color: var(--muted); }
+  .meta a { color: var(--muted); }
+  .meta a:hover { color: var(--ink); }
+  .hero-map { margin: 0; }
+  .hero-map img { border: 1px solid var(--rule); border-radius: 6px; box-shadow: 0 24px 50px -32px rgba(9, 49, 89, 0.55); }
+  figcaption { font-size: 14px; color: var(--muted); margin-top: 10px; line-height: 1.6; }
+
+  /* ---- sections ---- */
+  section { padding-block: 0 76px; }
+  h2 { font-size: 30px; font-weight: 800; color: var(--navy); margin: 0 0 10px; line-height: 1.45; text-wrap: balance; }
+  :root[data-ui="en"] h2 { line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 14px; }
+  .intro { margin: 0 0 30px; max-width: 46em; color: #34495b; }
+
+  /* what you can know: the program's step 3, group by group, with its tick boxes */
+  .groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 34px 56px; }
+  .group h3 { display: flex; align-items: center; gap: 12px; font-size: 19px; font-weight: 700; color: var(--green);
+    margin: 0 0 6px; padding-bottom: 10px; border-bottom: 2px solid var(--green); }
+  .group h3 svg { width: 30px; height: 30px; flex: none; }
+  .group ul { list-style: none; margin: 0; padding: 0; }
+  .group li { position: relative; padding-block: 12px; padding-inline-start: 34px; border-bottom: 1px solid var(--rule); }
+  .group li::before {             /* a ticked box, as in the program */
+    content: ""; position: absolute; inset-inline-start: 0; top: 17px; width: 19px; height: 19px;
+    border: 1.5px solid var(--green); border-radius: 4px;
+    background: var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5 8.5 14 15 6.5' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 15px no-repeat;
+  }
+  :root[data-ui="en"] .group li::before { top: 15px; }
+  .group.more li::before { background: var(--wheat); border-color: var(--wheat); border-radius: 50%; width: 12px;
+    height: 12px; top: 22px; inset-inline-start: 4px; background-image: none; }
+  :root[data-ui="en"] .group.more li::before { top: 19px; }
+  .group b { display: block; font-weight: 700; color: var(--ink); }
+  .group p { margin: 2px 0 0; font-size: 15.5px; color: #3e5263; }
+  .overview-line { margin: 30px 0 0; padding: 16px 20px; background: var(--tint); border-radius: 10px; max-width: 60em; }
+
+  /* real results */
+  .gallery { columns: 3 300px; column-gap: 26px; }
+  .gallery figure { break-inside: avoid; margin: 0 0 30px; }
+  .gallery img { border: 1px solid var(--rule); border-radius: 5px; background: #fff; }
+  .gallery a:hover img { border-color: #9fb3c2; }
+
+  /* three steps: a real sequence, so numbered */
+  .start { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 50px; align-items: start; }
+  .steps { list-style: none; counter-reset: s; margin: 0; padding: 0; }
+  .steps li { counter-increment: s; position: relative; padding-inline-start: 58px; margin-bottom: 26px; }
+  .steps li::before {
+    content: counter(s); position: absolute; inset-inline-start: 0; top: 2px; width: 40px; height: 40px;
+    border-radius: 50%; background: var(--wheat); color: var(--navy); font-weight: 800; font-size: 19px;
+    display: grid; place-items: center; line-height: 1;
+  }
+  .steps b { display: block; font-size: 18.5px; color: var(--navy); }
+  .steps p { margin: 4px 0 0; font-size: 16px; color: #3e5263; }
+  .needs { font-size: 15.5px; color: var(--muted); margin: 6px 0 0; }
+  .window img { border: 1px solid #c9d5dd; border-radius: 8px; box-shadow: 0 22px 46px -30px rgba(9, 49, 89, 0.6); }
+
+  /* versions with their dates, newest first */
+  .versions { width: 100%; border-collapse: collapse; font-size: 16px; }
+  .versions th { text-align: start; font-size: 14.5px; font-weight: 700; color: var(--muted);
+    padding: 0 0 8px; padding-inline-end: 24px; border-bottom: 2px solid var(--navy); }
+  .versions td { padding: 14px 0; padding-inline-end: 24px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .versions td:first-child { font-weight: 800; white-space: nowrap; color: var(--navy); }
+  .versions tbody tr:first-child td:first-child { color: var(--green); }
+  .versions td:nth-child(2) { white-space: nowrap; color: var(--muted); }
+  .versions td:last-child { padding-inline-end: 0; color: #34495b; }
+  .versions .notes { white-space: nowrap; }
+
+  /* creator */
+  .creator { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 30px; align-items: center;
+    background: var(--tint); border-radius: 16px; padding: 34px 38px; }
+  #madeby { margin: 0 0 2px; font-size: 18px; color: var(--green); letter-spacing: 0; }
+  .creator .name { font-size: 30px; font-weight: 800; color: var(--navy); margin: 0 0 10px; line-height: 1.4; }
+  .creator .name .alt { font-size: 18px; font-weight: 500; color: var(--muted); margin-inline-start: 10px; }
+  .creator p { margin: 0; max-width: 50em; }
+  .links { display: flex; flex-wrap: wrap; gap: 12px; }
+  .pill { display: inline-block; padding: 9px 22px; border-radius: 999px; border: 1.5px solid var(--green);
+    color: var(--green); background: #fff; text-decoration: none; font-weight: 700; font-size: 16px; }
+  .pill:hover { background: var(--green); color: #fff; }
+  .cite { margin-top: 22px; padding-top: 18px; border-top: 1px solid #d5e2d8; grid-column: 1 / -1; }
+  .cite h3 { font-size: 16px; margin: 0 0 4px; color: var(--navy); }
+  .cite p { font-size: 15px; color: #34495b; }
+
+  footer { border-top: 1px solid var(--rule); padding-block: 22px 40px; font-size: 13.5px; color: var(--muted);
+    line-height: 1.75; }
+  footer p { margin: 0 0 8px; max-width: 100%; }
+
+  @media (max-width: 980px) {
+    .hero, .start { grid-template-columns: 1fr; gap: 36px; }
+    .hero { padding-block: 22px 56px; }
+    .hero-map { max-width: 560px; }
+    .groups { grid-template-columns: 1fr; }
+    .creator { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .wrap { padding-inline: 16px; }
+    .top { padding-block: 14px 4px; }
+    .brand img { width: 176px; }
+    .by { display: none; }
+    .lede { font-size: 17.5px; }
+    .download { width: 100%; justify-content: center; font-size: 19px; }
+    h2 { font-size: 25px; }
+    section { padding-block: 0 56px; }
+    .creator { padding: 24px 20px; }
+    .versions thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .versions tr { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; padding: 12px 0;
+      border-bottom: 1px solid var(--rule); }
+    .versions tbody tr:first-child { border-top: 2px solid var(--navy); }
+    .versions td { padding: 0; border: 0; }
+    .versions td:last-child { grid-column: 1 / -1; margin-top: 4px; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 </style>
 </head>
 <body>
-<main>
-  <img src="assets/logo-wide.png" alt="AgroScope Kurdistan">
-  <p>ئاو، وشکەساڵی، بەروبووم و پێشبینی بۆ زەوییە کشتوکاڵییەکەت</p>
-  <p lang="en" dir="ltr">Water, drought, crops and forecasts for your farmland</p>
-  <a class="dl" href="https://github.com/kchomani/AgroScope-Kurdistan/releases">داگرتن · Download</a>
+
+<header class="top wrap">
+  <a class="brand" href="#top"><img src="assets/logo-wide.png" alt="AgroScope Kurdistan" width="562" height="180"></a>
+  <div class="top-end">
+    <span class="by" data-l="ku">دروستکراوە لەلایەن <a href="#about">کەیفی چۆمانی</a>، زانکۆی ڕاپەڕین</span>
+    <span class="by" data-l="en">Created by <a href="#about">Kaifi Chomani</a>, University of Raparin</span>
+    <a class="nav" href="#about"><span data-l="ku">دەربارە</span><span data-l="en">About</span></a>
+    <button class="lang" id="lang" type="button">
+      <span data-l="ku" lang="en">English</span><span data-l="en" lang="ckb" dir="rtl">کوردی</span>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero wrap">
+    <div>
+      <h1 data-l="ku">ئاو، وشکەساڵی، بەروبووم و پێشبینی بۆ کێڵگەکەت</h1>
+      <h1 data-l="en">Water, drought, crops and forecasts for your farm</h1>
+      <p class="lede" data-l="ku">AgroScope Kurdistan بەرنامەیەکی بەخۆڕاییە بۆ Windows، بۆ جووتیاران، ئەندازیارانی
+        کشتوکاڵ و قوتابیانی هەرێمی کوردستان. کێڵگەکەت لەسەر نەخشە بکێشە، ڕێکەوتێک هەڵبژێرە و ئەوەی دەتەوێت بیزانیت
+        دیاری بکە: بەرنامەکە نوێترین داتای مانگی دەستکرد و کەشوهەوا بۆ ئەو ناوچەیە دادەگرێت و نەخشە، چارت و ڕاپۆرت بە
+        کوردی یان ئینگلیزی دروست دەکات.</p>
+      <p class="lede" data-l="en">AgroScope Kurdistan is a free Windows program for farmers, agronomists and students
+        in the Kurdistan Region. Draw your field on the map, pick a date and tick what you want to know: the program
+        downloads the newest satellite and weather data for that area and makes maps, charts and a report, in
+        Kurdish or English.</p>
+      <a class="download" id="download" href="https://github.com/kchomani/AgroScope-Kurdistan/releases/latest/download/AgroScope-Kurdistan-Windows-x64.zip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M6.5 10.5 12 16l5.5-5.5"/><path d="M4 20h16"/></svg>
+        <span data-l="ku">داگرتن بۆ Windows</span><span data-l="en">Download for Windows</span>
+      </a>
+      <p class="meta">
+        <span data-l="ku"><span id="relinfo-ku">وەشانی 1.0.0: یەکەم وەشانی گشتی، 31/10/2026.</span> بەخۆڕایی، بێ دامەزراندن و بێ ئەکاونت.
+          <a href="#updates">هەموو وەشانەکان و ڕێکەوتەکانیان</a></span>
+        <span data-l="en"><span id="relinfo-en">Version 1.0.0: First public version, 31 October 2026.</span> Free, no installation and no account.
+          <a href="#updates">All versions and their dates</a></span>
+      </p>
+    </div>
+    <figure class="hero-map">
+      <a data-l="ku" href="assets/ku/overview-stress-full.jpg"><img src="assets/ku/overview-stress.jpg" width="900" height="1046" loading="lazy"
+        alt="نەخشەی هەرێمی کوردستان بە ڕەنگی کەمئاوی: سەوز بۆ بێ کەمئاوی، زەرد و پرتەقاڵی و سوور بۆ کەمئاویی زیاتر."></a>
+      <a data-l="en" href="assets/en/overview-stress-full.jpg"><img src="assets/en/overview-stress.jpg" width="900" height="1046" loading="lazy"
+        alt="Map of the Kurdistan Region coloured by water stress: green for none, yellow, orange and red for more."></a>
+      <figcaption data-l="ku">بەشی «تێڕوانینی گشتیی کوردستان»: کەمئاوی لە سەرانسەری هەرێمەکە لە داتای WaPOR ی
+        FAO. بەرنامەکە ئەم نەخشانە هەموو ڕۆژێک بە نوێترین داتا دووبارە دروست دەکاتەوە.</figcaption>
+      <figcaption data-l="en">The Kurdistan overview tab: water stress across the whole region from FAO WaPOR data. The
+        program makes these maps again every day with the newest data.</figcaption>
+    </figure>
+  </div>
+
+  <section class="wrap" aria-labelledby="know">
+    <h2 id="know"><span data-l="ku">دەتەوێت چی بزانیت؟</span><span data-l="en">What do you want to know?</span></h2>
+    <p class="intro" data-l="ku">ئەمانە ئەو 14 بابەتەن کە لە هەنگاوی 3 ی بەرنامەکەدا دیاریان دەکەیت، لەگەڵ
+      تێڕوانینی گشتیی کوردستان. هەر بابەتێک دەبێتە نەخشە یان چارتێکی JPEG، و ئەنجامە سەرەکییەکان بە زمانێکی سادە لە
+      ڕاپۆرتێکدا کۆدەکرێنەوە.</p>
+    <p class="intro" data-l="en">The 14 items you tick in step 3 of the program, and the Kurdistan overview. Each item
+      becomes a JPEG map or chart, and the main findings are gathered in plain words in a report.</p>
+
+    <div class="groups">
+      <div class="group">
+        <h3><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M4 25c4-9 10-14 22-17-1 9-6 16-15 17-3 .3-5 0-7 0Z" fill="#2e9e44"/><path d="M6 24c5-5 9-8 15-11" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="8" cy="7" r="3.2" fill="#1f6fb2"/></svg>
+          <span data-l="ku">بەروبووم و ئاو (مانگی دەستکرد، WaPOR)</span><span data-l="en">Crop and water (satellite, WaPOR)</span></h3>
+        <ul>
+          <li data-l="ku"><b>تەندروستیی بەروبووم ئێستا (Sentinel-2، 10 م)</b><p>NDVI، ئاوی ناو ڕووەک و وێنەی ڕەنگی ڕاستەقینە لە ڕوونترین وێنەکانی Sentinel-2 نزیک ڕێکەوتەکەت.</p></li>
+          <li data-l="en"><b>Crop health now (Sentinel-2, 10 m)</b><p>NDVI, plant water content and a true-colour image from the clearest Sentinel-2 images near your date.</p></li>
+          <li data-l="ku"><b>کەمئاویی ڕووەک و ئاوی کەم (WaPOR، 100 م)</b><p>ڕووەکەکانت چەند لەو ئاوەی پێویستیان بوو وەریانگرتووە، ئاوی کەم بە ملم و م³، شێی خاک و 12 مانگی ڕابردوو.</p></li>
+          <li data-l="en"><b>Water stress and missing water (WaPOR, 100 m)</b><p>How much of the water your crops needed they actually got, the missing water in mm and m³, soil moisture and the last 12 months.</p></li>
+          <li data-l="ku"><b>بەکارهێنانی ئاو، بەرهەمی ڕووەکی و بەرهەمداریی ئاو</b><p>ئاوی بەکارهاتوو، بەرهەمی ڕووەکی و کیلۆگرام بەرهەم بۆ هەر م³ ئاو، و بەکارهێنانی ئاوی ئەم مانگە بەراورد بە ئاسایی.</p></li>
+          <li data-l="en"><b>Water use, biomass and water productivity</b><p>Water consumed, biomass produced and kilograms of biomass per m³ of water, and this month's water use against the normal.</p></li>
+          <li data-l="ku"><b>زەویی ئاوی و دێمی</b><p>ئەو کێڵگانەی لە هاوینی وشکدا سەوز دەمێننەوە و ئاو بەکاردەهێنن ئاوین؛ ئەوانی تر دێمین یان بەیار.</p></li>
+          <li data-l="en"><b>Irrigated and rainfed land</b><p>Fields that stay green and use water in the dry summer are irrigated; the rest are rainfed (dêmî) or fallow.</p></li>
+          <li data-l="ku"><b>چی لێرە دەڕوێت؟ (ساڵنامەی بەروبووم)</b><p>لە 12 مانگ گەشەی ڕووەک: بەروبوومی زستان، بەروبوومی هاوین، دوو بەروبووم لە ساڵێکدا، باخ و دارستان، لەوەڕگا.</p></li>
+          <li data-l="en"><b>What grows here? (crop calendar)</b><p>From 12 months of plant growth: winter crops, summer crops, two crops a year, orchards and forest, pasture.</p></li>
+        </ul>
+      </div>
+
+      <div class="group">
+        <h3><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M15 3c4 6 8 10 8 15a8 8 0 0 1-16 0c0-5 4-9 8-15Z" fill="#1f6fb2"/><path d="M11 18a4 4 0 0 0 4 4" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+          <span data-l="ku">باران و وشکەساڵی</span><span data-l="en">Rain and drought</span></h3>
+        <ul>
+          <li data-l="ku"><b>باران و پێوەری وشکەساڵی (SPI) لە 1991ەوە</b><p>بارانی مانگانە لە ناوچەکەت (ERA5)، بارانی ئەم وەرزە بەراورد بە ئاسایی و پێوەری وشکەساڵیی SPI بۆ 1، 3، 6 و 12 مانگ.</p></li>
+          <li data-l="en"><b>Rain and drought index (SPI) since 1991</b><p>Monthly rain at your area (ERA5), this season's rain against normal and the Standardised Precipitation Index over 1, 3, 6 and 12 months.</p></li>
+        </ul>
+
+        <h3 style="margin-top:34px"><svg viewBox="0 0 30 30" aria-hidden="true" fill="none" stroke="#8a6a2e" stroke-linecap="round"><path d="M3 24c6-8 11-11 16-8s8 1 9-4" stroke-width="2"/><path d="M3 18c5-7 10-9 14-7s7 0 9-5" stroke-width="1.4"/><path d="M5 12c4-5 8-7 11-5" stroke-width="1"/></svg>
+          <span data-l="ku">زەوی و بەروبووم</span><span data-l="en">Land and crops</span></h3>
+        <ul>
+          <li data-l="ku"><b>گونجاویی زەوی و بەروبووم</b><p>کام زەوی بۆ بەروبوومی کێڵگە باشە، و کام لە 24 بەروبووم لەگەڵ کەشوهەوا، لێژی و شەختەی ناوچەکەت دەگونجێت (پێداویستییەکانی FAO).</p></li>
+          <li data-l="en"><b>Land and crop suitability</b><p>Which land is good for field crops, and which of 24 crops suit your area's climate, slope and frost (FAO crop requirements).</p></li>
+          <li data-l="ku"><b>بەرزی و لێژی (30 م)</b><p>Copernicus DEM: بەرزی لە ئاستی دەریا و لێژی بە پلە.</p></li>
+          <li data-l="en"><b>Elevation and slope (30 m)</b><p>Copernicus DEM: height above sea level and slope in degrees.</p></li>
+        </ul>
+      </div>
+
+      <div class="group">
+        <h3><svg viewBox="0 0 30 30" aria-hidden="true"><rect x="3" y="6" width="24" height="21" rx="3" fill="none" stroke="#093159" stroke-width="2"/><path d="M3 12h24" stroke="#093159" stroke-width="2"/><path d="M9 3v6M21 3v6" stroke="#093159" stroke-width="2" stroke-linecap="round"/><circle cx="15" cy="19" r="4" fill="#e2b22c"/></svg>
+          <span data-l="ku">پێشبینییەکان</span><span data-l="en">Forecasts</span></h3>
+        <ul>
+          <li data-l="ku"><b>پێشبینیی کەشوهەوا بۆ 16 ڕۆژ</b><p>باران، پلەی گەرما، با و شێی خاک، لەگەڵ ئاگادارکردنەوە بۆ شەختە، گەرمای زۆر، بارانی بەخوڕ و بای بەهێز، و ڕۆژی باش بۆ دەرمانڕشتن.</p></li>
+          <li data-l="en"><b>Weather forecast for 16 days</b><p>Rain, temperature, wind and soil moisture, with warnings for frost, heat, heavy rain and strong wind, and good days for spraying.</p></li>
+          <li data-l="ku"><b>پێشبینیی ئاودێری بۆ بەروبوومەکەت</b><p>پێویستیی ئاوی بەروبووم (FAO-56) لێدەرکردنی بارانی پێشبینیکراو، بۆ هەر ڕۆژێکی 16 ڕۆژی داهاتوو، بە ملم و م³.</p></li>
+          <li data-l="en"><b>Irrigation forecast for your crop</b><p>Crop water need (FAO-56) minus the forecast rain, for every day of the next 16 days, in mm and m³.</p></li>
+          <li data-l="ku"><b>قۆناغەکانی گەشە و کاتی دروێنە</b><p>لە ڕێکەوتی چاندنەوە: کاتی چاوەڕوانکراوی گوڵکردن و دروێنە، لەگەڵ مەترسیی گەرما و شەختە.</p></li>
+          <li data-l="en"><b>Growth stages and harvest date</b><p>From your sowing date: the expected dates of flowering and harvest, with heat and frost risks.</p></li>
+          <li data-l="ku"><b>پێشبینیی وەرزی: 6 مانگی داهاتوو</b><p>ئایا مانگەکانی داهاتوو تەڕتر یان وشکتر، گەرمتر یان ساردتر دەبن لە ئاسایی؟ (ECMWF، تەنها ئاماژەیە)</p></li>
+          <li data-l="en"><b>Seasonal outlook: the next 6 months</b><p>Will the coming months be wetter or drier, warmer or colder than usual? (ECMWF, an indication only)</p></li>
+          <li data-l="ku"><b>گۆڕانی کەشوهەوا تا ساڵانی 2040</b><p>گۆڕانی ڕۆژانی گەرم، پلەی گەرما و باران بەپێی دوو مۆدێلی کەشوهەوای ورد (CMIP6).</p></li>
+          <li data-l="en"><b>Climate change by the 2040s</b><p>Change of hot days, temperature and rain from two high-resolution climate models (CMIP6).</p></li>
+          <li data-l="ku"><b>پێشبینیی ئاوی ڕووبار (3 مانگ)</b><p>ئاوی نزیکترین ڕووبار (GloFAS): مانگی ڕابردوو و پێشبینیی 3 مانگ بەراورد بە ئاسایی.</p></li>
+          <li data-l="en"><b>River flow forecast (3 months)</b><p>Discharge of the nearest river (GloFAS): the last month and the 3-month forecast against normal.</p></li>
+        </ul>
+      </div>
+
+      <div class="group more">
+        <h3><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M4 6 13 4l13 4v17l-13-3-9 3Z" fill="#e9f3ea" stroke="#187124" stroke-width="1.8" stroke-linejoin="round"/><path d="M13 4v18" stroke="#187124" stroke-width="1.4"/><rect x="16" y="11" width="4" height="4" fill="#d73027"/><rect x="7" y="13" width="4" height="4" fill="#e2b22c"/></svg>
+          <span data-l="ku">هەموو هەرێمەکە، و ڕاپۆرتەکەت</span><span data-l="en">The whole region, and your report</span></h3>
+        <ul>
+          <li data-l="ku"><b>تێڕوانینی گشتیی کوردستان</b><p>نەخشەی هەموو هەرێمەکە (وردیی نزیکەی 1 کم): کەمئاوی، بەکارهێنانی ئاو بەراورد بە ئاسایی، بارانی 16 ڕۆژی داهاتوو، گەرمترین ڕۆژ و ساردترین شەو، و ڕیزبەندیی 20 قەزاکە.</p></li>
+          <li data-l="en"><b>Kurdistan overview</b><p>Maps of the whole region (about 1 km detail): water stress, water use against normal, rain of the next 16 days, the hottest day and the coldest night, and the 20 districts ranked.</p></li>
+          <li data-l="ku"><b>ڕاپۆرتی کێڵگە</b><p>ئەنجامە سەرەکییەکان بە زمانێکی سادە لە لاپەڕەی یەکەمدا، و هەموو نەخشە و چارتەکان لە لاپەڕەکانی دواتر، بۆ چاپکردن یان ناردن.</p></li>
+          <li data-l="en"><b>Farm report</b><p>The main findings in plain words on the first page and every map and chart on the next pages, ready to print or send.</p></li>
+          <li data-l="ku"><b>کوردی و ئینگلیزی</b><p>بەرنامەکە بە کوردی دەکرێتەوە و بە یەک کرتە دەبێت بە ئینگلیزی؛ نەخشە و ڕاپۆرتەکان بە هەمان زمان دروست دەکرێن.</p></li>
+          <li data-l="en"><b>Kurdish and English</b><p>The program opens in Kurdish and switches to English with one click; maps and reports are made in the same language.</p></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap" aria-labelledby="examples">
+    <h2 id="examples"><span data-l="ku">ئەنجامی ڕاستەقینە: دەشتی ڕانیە</span><span data-l="en">Real results: the Ranya plain</span></h2>
+    <p class="intro" data-l="ku">ئەم وێنانە بەرنامەکە خۆی دروستی کردوون بۆ 14 کم² لە دەشتی ڕانیە لە <span class="exdate-ku">31/10/2026</span>، بە گەنم وەک بەروبووم. کرتە لە هەر وێنەیەک بکە بۆ بینینی بە قەبارەی تەواو.</p>
+    <p class="intro" data-l="en">Made by the program itself for 14 km² of the Ranya plain on <span class="exdate-en">31 October 2026</span>, with wheat as the crop. Click a picture to see it full size.</p>
+    <div class="gallery">
+      <figure data-l="ku"><a href="assets/ku/report-full.jpg"><img src="assets/ku/report.jpg" width="760" height="1074" loading="lazy" alt="لاپەڕەی یەکەمی ڕاپۆرتی کێڵگە بە کوردی بۆ دەشتی ڕانیە، لەگەڵ لیستی ئەنجامە سەرەکییەکان و چوار نەخشە و چارت."></a><figcaption>ڕاپۆرتی کێڵگە، لاپەڕەی 1: ئەنجامە سەرەکییەکان بە زمانێکی سادە و گرنگترین نەخشەکان.</figcaption></figure>
+      <figure data-l="en"><a href="assets/en/report-full.jpg"><img src="assets/en/report.jpg" width="760" height="1074" loading="lazy" alt="Page 1 of the farm report for the Ranya plain, with the list of main findings and four maps and charts."></a><figcaption>Farm report, page 1: the main findings in plain words and the key maps.</figcaption></figure>
+      <figure data-l="ku"><a href="assets/ku/stress-full.jpg"><img src="assets/ku/stress.jpg" width="760" height="1011" loading="lazy" alt="نەخشەی کەمئاوی بە ڕەنگی سەوز، زەرد، پرتەقاڵی و سوور لەسەر وێنەی مانگی دەستکرد."></a><figcaption>کەمئاویی ڕووەک لە دەیەی دووەمی تشرینی یەکەم 2026 (WaPOR): زەوییە کشتوکاڵییەکە <bdi class="ltr">38%</bdi>ی ئەو ئاوەی پێویستی بوو وەریگرتووە.</figcaption></figure>
+      <figure data-l="en"><a href="assets/en/stress-full.jpg"><img src="assets/en/stress.jpg" width="760" height="1011" loading="lazy" alt="Water stress map in green, yellow, orange and red over a satellite image."></a><figcaption>Water stress, 2nd 10 days of October 2026 (WaPOR): the farmland got 38% of the water it needed.</figcaption></figure>
+      <figure data-l="ku"><a href="assets/ku/health-full.jpg"><img src="assets/ku/health.jpg" width="760" height="962" loading="lazy" alt="نەخشەی NDVI ی دەشتی ڕانیە: کێڵگە سەوزەکان و زەویی ڕووت."></a><figcaption>تەندروستیی بەروبووم (NDVI) لە 27/10/2026، لە Sentinel-2 بە وردیی 10 م.</figcaption></figure>
+      <figure data-l="en"><a href="assets/en/health-full.jpg"><img src="assets/en/health.jpg" width="760" height="962" loading="lazy" alt="NDVI map of the Ranya plain: green fields and bare land."></a><figcaption>Crop health (NDVI) on 27 October 2026, from Sentinel-2 at 10 m.</figcaption></figure>
+      <figure data-l="ku"><a href="assets/ku/drought-full.jpg"><img src="assets/ku/drought.jpg" width="760" height="771" loading="lazy" alt="چارتی بارانی وەرز، بارانی ساڵانە و هێڵی SPI."></a><figcaption>باران لە 1991ەوە و پێوەری وشکەساڵی SPI: بارانی ئەم وەرزە تا ئێستا ئاساییە.</figcaption></figure>
+      <figure data-l="en"><a href="assets/en/drought-full.jpg"><img src="assets/en/drought.jpg" width="760" height="746" loading="lazy" alt="Charts of the season&#x27;s rain, yearly rain and the SPI line."></a><figcaption>Rain since 1991 and the SPI drought index: this season's rain is normal so far.</figcaption></figure>
+      <figure data-l="ku"><a href="assets/ku/crops-full.jpg"><img src="assets/ku/crops.jpg" width="760" height="726" loading="lazy" alt="ڕیزبەندیی 24 بەروبووم بەپێی گونجاوی بۆ ناوچەکە."></a><figcaption>کام لە 24 بەروبووم بۆ ئەم ناوچەیە دەگونجێت: گەنم یەکەمە.</figcaption></figure>
+      <figure data-l="en"><a href="assets/en/crops-full.jpg"><img src="assets/en/crops.jpg" width="760" height="726" loading="lazy" alt="Ranking of 24 crops by how well they suit the area."></a><figcaption>Which of 24 crops suit this area: wheat comes first.</figcaption></figure>
+      <figure data-l="ku"><a href="assets/ku/weather-full.jpg"><img src="assets/ku/weather.jpg" width="760" height="832" loading="lazy" alt="چارتەکانی پێشبینیی کەشوهەوای 16 ڕۆژ."></a><figcaption>پێشبینیی کەشوهەوای 16 ڕۆژ: باران، پلەی گەرما، با و شێی خاک، لەگەڵ ئاگادارکردنەوەی بارانی بەخوڕ و ڕۆژی باش بۆ دەرمانڕشتن.</figcaption></figure>
+      <figure data-l="en"><a href="assets/en/weather-full.jpg"><img src="assets/en/weather.jpg" width="760" height="813" loading="lazy" alt="Charts of the 16-day weather forecast."></a><figcaption>16-day weather forecast: rain, temperature, wind and soil moisture, with heavy-rain warnings and good days for spraying.</figcaption></figure>
+      <figure data-l="ku"><a href="assets/ku/irrigation-full.jpg"><img src="assets/ku/irrigation.jpg" width="760" height="504" loading="lazy" alt="چارتی پێویستیی ئاوی گەنم و بارانی پێشبینیکراو بۆ هەر ڕۆژێک."></a><figcaption>پێشبینیی ئاودێری بۆ گەنمی دێمی: باران پێویستیی ئاوی 16 ڕۆژی داهاتوو پڕدەکاتەوە.</figcaption></figure>
+      <figure data-l="en"><a href="assets/en/irrigation-full.jpg"><img src="assets/en/irrigation.jpg" width="760" height="504" loading="lazy" alt="Chart of the daily water need of wheat and the forecast rain."></a><figcaption>Irrigation forecast for rainfed wheat: rain covers the water need of the next 16 days.</figcaption></figure>
+      <figure data-l="ku"><a href="assets/ku/stages-full.jpg"><img src="assets/ku/stages.jpg" width="760" height="518" loading="lazy" alt="هێڵی کاتی قۆناغەکانی گەشەی گەنم لە چاندنەوە تا دروێنە."></a><figcaption>قۆناغەکانی گەشەی گەنم کە لە 15/11/2026 دەچێنرێت: دروێنە نزیکەی 2/6/2027.</figcaption></figure>
+      <figure data-l="en"><a href="assets/en/stages-full.jpg"><img src="assets/en/stages.jpg" width="760" height="473" loading="lazy" alt="Timeline of the growth stages of wheat from sowing to harvest."></a><figcaption>Growth stages of wheat sown on 15 November 2026: harvest around 2 June 2027.</figcaption></figure>
+      <figure data-l="ku"><a href="assets/ku/calendar-full.jpg"><img src="assets/ku/calendar.jpg" width="760" height="962" loading="lazy" alt="نەخشەی ساڵنامەی بەروبووم: بەروبوومی زستان، هاوین، دوو بەروبووم و لەوەڕگا."></a><figcaption>چی لێرە دەڕوێت لە 2026: <bdi class="ltr">71%</bdi>ی زەوییەکە بەروبوومی زستان و بەهارە (گەنم، جۆ).</figcaption></figure>
+      <figure data-l="en"><a href="assets/en/calendar-full.jpg"><img src="assets/en/calendar.jpg" width="760" height="962" loading="lazy" alt="Crop calendar map: winter crops, summer crops, two crops a year and pasture."></a><figcaption>What grows here in 2026: 71% of the land is winter-spring crops (wheat, barley).</figcaption></figure>
+      <figure data-l="ku"><a href="assets/ku/seasonal-full.jpg"><img src="assets/ku/seasonal.jpg" width="760" height="655" loading="lazy" alt="چارتی پێشبینیی وەرزیی باران و پلەی گەرما."></a><figcaption>پێشبینیی وەرزی بۆ 6 مانگی داهاتوو (ECMWF): تەڕتر یان وشکتر، گەرمتر یان ساردتر لە ئاسایی.</figcaption></figure>
+      <figure data-l="en"><a href="assets/en/seasonal-full.jpg"><img src="assets/en/seasonal.jpg" width="760" height="610" loading="lazy" alt="Chart of the seasonal outlook for rain and temperature."></a><figcaption>Seasonal outlook for the next 6 months (ECMWF): wetter or drier, warmer or colder than usual.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="wrap" aria-labelledby="start">
+    <h2 id="start"><span data-l="ku">بە سێ هەنگاو دەست پێبکە</span><span data-l="en">Start in three steps</span></h2>
+    <div class="start">
+      <div>
+        <ol class="steps" data-l="ku">
+          <li><b>داگرتن و کردنەوەی zip</b><p>فایلی zip دابگرە، کرتەی ڕاستی لێ بکە و <bdi class="ui">Extract All</bdi> هەڵبژێرە. چاوەڕێ بکە تا کردنەوەکە تەواو دەبێت؛ <bdi class="ui">AgroScope.exe</bdi> دوایین فایلە کە دەردەکەوێت.</p></li>
+          <li><b>کردنەوەی بەرنامەکە</b><p>بوخچەی AgroScope بکەرەوە و دوو کرتە لە <bdi class="ui">AgroScope.exe</bdi> بکە. ئەگەر Windows نووسی <bdi class="ui">“Windows protected your PC”</bdi>، کرتە لە <bdi class="ui">More info</bdi> و پاشان <bdi class="ui">Run anyway</bdi> بکە: بەرنامەکە بەخۆڕاییە و واژووی دیجیتاڵی نییە.</p></li>
+          <li><b>ناوچەکەت دیاری بکە و دەستپێبکە</b><p>کێڵگەکەت لەسەر نەخشە بکێشە یان فایلی ناوچەکەت باربکە، ئەوەی دەتەوێت بیزانیت دیاری بکە و «دەستپێکردن» دابگرە. نەخشە و ڕاپۆرتەکان لە بوخچەیەکی نوێ لەسەر دێسکتۆپ پاشەکەوت دەکرێن.</p></li>
+        </ol>
+        <ol class="steps" data-l="en">
+          <li><b>Download and unzip</b><p>Download the zip file, right-click it and choose Extract All. Wait until unzipping has finished; AgroScope.exe is the last file to appear.</p></li>
+          <li><b>Open the program</b><p>Open the AgroScope folder and double-click AgroScope.exe. If Windows says “Windows protected your PC”, click More info, then Run anyway: the program is free and not code-signed.</p></li>
+          <li><b>Choose your area and press Run</b><p>Draw your field on the map or load your area file, tick what you want to know and press Run. The maps and the report are saved in a new folder on the Desktop.</p></li>
+        </ol>
+        <p class="needs" data-l="ku">پێویستی بە Windows 10 یان 11 (64-bit) و ئینتەرنێت هەیە؛ پێویستی بە ئەکاونت نییە. ئەگەر کێڵگەکەت فایلی GeoJSON، KML، KMZ، SHP یان GPKG ی هەیە، دەتوانیت ڕاستەوخۆ باری بکەیت.</p>
+        <p class="needs" data-l="en">Needs Windows 10 or 11 (64-bit) and an internet connection; no account. If you have your field as a GeoJSON, KML, KMZ, SHP or GPKG file, you can load it directly.</p>
+      </div>
+      <figure class="window" style="margin:0">
+        <a data-l="ku" href="assets/ku/window.jpg"><img src="assets/ku/window.jpg" width="1200" height="750" loading="lazy"
+          alt="پەنجەرەی بەرنامەکە بە کوردی: ڕاپۆرتی کێڵگە و لیستی نەخشە و چارتەکان لە بەشی ئەنجامەکان."></a>
+        <a data-l="en" href="assets/en/window.jpg"><img src="assets/en/window.jpg" width="1200" height="750" loading="lazy"
+          alt="The program window in English: the farm report and the list of maps and charts in the Results tab."></a>
+        <figcaption data-l="ku">پەنجەرەی بەرنامەکە: ئەنجامەکانی دەشتی ڕانیە لە بەشی «ئەنجامەکان».</figcaption>
+        <figcaption data-l="en">The program window: the Ranya plain results in the Results tab.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="wrap" aria-labelledby="updates">
+    <h2 id="updates"><span data-l="ku">وەشانەکان</span><span data-l="en">Updates</span></h2>
+    <table class="versions">
+      <thead>
+        <tr data-l="ku"><th scope="col">وەشان</th><th scope="col">ڕێکەوت</th><th scope="col">ناو و ئەوەی نوێیە</th></tr>
+        <tr data-l="en"><th scope="col">Version</th><th scope="col">Date</th><th scope="col">Name and what changed</th></tr>
+      </thead>
+      <tbody id="versions">
+        <tr>
+          <td><bdi class="ltr">1.0.0</bdi></td><td><span data-l="ku">31/10/2026</span><span data-l="en">31 October 2026</span></td>
+          <td><span data-l="ku"><b>یەکەم وەشانی گشتی.</b> هەموو 14 بابەتەکە، تێڕوانینی گشتیی کوردستان و ڕاپۆرتی کێڵگە، بە کوردی و ئینگلیزی.</span>
+            <span data-l="en"><b>First public version.</b> All 14 items, the Kurdistan overview and the farm report, in Kurdish and English.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="wrap" id="about" aria-labelledby="madeby">
+    <div class="creator">
+      <div>
+        <h2 id="madeby"><span data-l="ku">دەربارە</span><span data-l="en">About</span></h2>
+        <p class="name"><span data-l="ku">کەیفی چۆمانی <span class="alt" lang="en">Kaifi Chomani</span></span><span data-l="en">Kaifi Chomani <span class="alt" lang="ckb">کەیفی چۆمانی</span></span></p>
+        <p data-l="ku">AgroScope Kurdistan دروستکراوە لەلایەن کەیفی چۆمانی، مامۆستای یاریدەدەر و توێژەر لە بەشی ئەندازیاریی شارستانی لە زانکۆی ڕاپەڕین لە ڕانیە، و دامەزرێنەری تاقیگەی ئیجیۆکەیت بۆ GIS و هەستپێکردنی دوور. بەرنامەکەی دروستکردووە بۆ ئەوەی جووتیاران و ئەندازیارانی کشتوکاڵی کوردستان بە بەخۆڕایی و بە زمانی خۆیان سوود لە داتای مانگی دەستکرد و کەشوهەوا وەربگرن.</p>
+        <p data-l="en">AgroScope Kurdistan is made by Kaifi Chomani, Assistant Lecturer and Researcher in the Civil Engineering Department at the University of Raparin in Ranya, and founder of Egeocate Lab for GIS &amp; Remote Sensing. He built it so that farmers and agronomists in Kurdistan can use satellite and weather data for free, in their own language.</p>
+      </div>
+      <div class="links">
+        <a class="pill" href="https://claude.ai/artifact/1pkEazJnxJPDjCm2udXrPu" rel="noopener">CV</a>
+        <a class="pill" href="https://egeocate.netlify.app/" rel="noopener"><span data-l="ku">تاقیگەی ئیجیۆکەیت</span><span data-l="en">Egeocate Lab</span></a>
+        <a class="pill" href="https://geotool-egeocate.netlify.app/" rel="noopener">Geo Tool</a>
+      </div>
+      <div class="cite">
+        <h3><span data-l="ku">چۆن ئاماژەی پێبکەیت</span><span data-l="en">How to cite</span></h3>
+        <p dir="ltr" lang="en" style="text-align:left">Chomani, K. (2026) <i>AgroScope Kurdistan <span class="citever">1.0.0</span>: open-data water, drought, crop and forecast maps for the Kurdistan Region</i>. Egeocate Lab for GIS &amp; Remote Sensing, University of Raparin. https://agroscope-kurdistan.netlify.app/</p>
+      </div>
+    </div>
+  </section>
 </main>
+
+<footer class="wrap">
+  <p data-l="ku">بەخۆڕاییە بۆ خوێندن، توێژینەوە و جووتیاران، و وەک خۆی پێشکەش دەکرێت، بێ گەرەنتی. ئەنجامەکان خەمڵاندنی مانگی دەستکرد و مۆدێلن: پێش بڕیاری گەورە لە کێڵگەدا بیپشکنە.</p>
+  <p data-l="en">Free for education, research and farmers, provided as is without warranty. The results are satellite and model estimates: check in the field before big decisions.</p>
+  <p data-l="ku">داتا: FAO WaPOR؛ Copernicus Sentinel-2 (ESA و یەکێتیی ئەوروپا) لە ڕێگەی Microsoft Planetary Computer؛ Open-Meteo لەگەڵ ECMWF، ERA5 و مۆدێلەکانی کەشوهەوای CMIP6؛ GloFAS؛ Copernicus DEM؛ ESA WorldCover؛ Sentinel-2 cloudless ی EOX؛ سنووری قەزاکان لە OCHA Iraq و geoBoundaries؛ OpenStreetMap. ناوی سەرچاوەی هەر داتایەک لەسەر هەموو نەخشەیەک نووسراوە.</p>
+  <p data-l="en">Data: FAO WaPOR; Copernicus Sentinel-2 (ESA, European Union) via Microsoft Planetary Computer; Open-Meteo with ECMWF, ERA5 and CMIP6 climate models; GloFAS; Copernicus DEM; ESA WorldCover; Sentinel-2 cloudless by EOX; district boundaries from OCHA Iraq via geoBoundaries; OpenStreetMap contributors. Every map AgroScope Kurdistan makes carries the credit its data provider asks for.</p>
+  <p data-l="ku">© 2026 کەیفی چۆمانی، تاقیگەی ئیجیۆکەیت بۆ GIS و هەستپێکردنی دوور.</p>
+  <p data-l="en">© 2026 Kaifi Chomani, Egeocate Lab for GIS &amp; Remote Sensing.</p>
+</footer>
+
+<script>
+  // Language switch, and every published version with its date (newest first) straight from the GitHub Releases
+  // of kchomani/AgroScope-Kurdistan, so a new version shows here with its date as soon as it is published. The text
+  // written in the page stays if GitHub cannot be reached. A release carries its one-line summaries in its notes as
+  // <!-- summary: ... --> and <!-- summary-ku: ... --> (hidden on GitHub).
+  (function () {
+    var REPO = "kchomani/AgroScope-Kurdistan", ZIP = "AgroScope-Kurdistan-Windows-x64.zip";
+    var root = document.documentElement, rels = null;
+    var TITLE = { ku: "AgroScope Kurdistan — ئاو، وشکەساڵی، بەروبووم و پێشبینی بۆ کێڵگەکەت",
+                  en: "AgroScope Kurdistan — water, drought, crops and forecasts for your farm" };
+    function lang() { return root.getAttribute("data-ui") === "en" ? "en" : "ku"; }
+    function parts(iso) {
+      var g = {};
+      new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Baghdad", day: "numeric", month: "numeric", year: "numeric" })
+        .formatToParts(new Date(iso)).forEach(function (p) { g[p.type] = p.value; });
+      return g;
+    }
+    function dateKu(iso) { var g = parts(iso); return g.day + "/" + g.month + "/" + g.year; }       // 31/10/2026
+    function dateEn(iso) {
+      return new Date(iso).toLocaleDateString("en-GB", { timeZone: "Asia/Baghdad", day: "numeric", month: "long",
+        year: "numeric" });
+    }
+    function note(rel, field) {         // <!-- name: … -->, <!-- name-ku: … -->, <!-- summary: … -->, <!-- summary-ku: … -->
+      var re = new RegExp("<!--\\s*" + field + ":\\s*([\\s\\S]*?)-->", "i");
+      var m = re.exec(rel.body || "");
+      return m ? m[1].replace(/\s+/g, " ").trim() : "";
+    }
+    function el(tag, attrs, text) {
+      var e = document.createElement(tag);
+      for (var k in attrs) e.setAttribute(k, attrs[k]);
+      if (text != null) e.textContent = text;
+      return e;
+    }
+    function render() {
+      if (!rels) return;
+      var dl = document.getElementById("download");
+      if (!rels.length) {            // nothing published yet
+        dl.href = "https://github.com/" + REPO + "/releases";
+        document.getElementById("relinfo-ku").textContent = "یەکەم وەشان ئامادە دەکرێت.";
+        document.getElementById("relinfo-en").textContent = "The first version is being prepared.";
+        return;
+      }
+      var latest = rels[0], v0 = String(latest.tag_name || "").replace(/^v/, "");
+      var a = (latest.assets || []).filter(function (x) { return x.name === ZIP; })[0];
+      if (a) {
+        dl.href = a.browser_download_url;
+        var mb = Math.round(a.size / 1e6);
+        var nk = note(latest, "name-ku"), ne = note(latest, "name");
+        document.getElementById("relinfo-ku").textContent = "وەشانی " + v0 + (nk ? ": " + nk : "") +
+          "، بڵاوکراوەتەوە لە " + dateKu(latest.published_at) + "، فایلێکی zip ی " + mb + " MB.";
+        document.getElementById("relinfo-en").textContent = "Version " + v0 + (ne ? ": " + ne : "") +
+          ", released " + dateEn(latest.published_at) + ", a " + mb + " MB zip file.";
+        Array.prototype.forEach.call(document.querySelectorAll(".citever"), function (s) { s.textContent = v0; });
+      }
+      var body = document.getElementById("versions"), frag = document.createDocumentFragment();
+      rels.forEach(function (rel) {
+        var v = String(rel.tag_name || "").replace(/^v/, "");
+        var tr = el("tr", {});
+        var c1 = el("td", {}); c1.appendChild(el("bdi", { "class": "ltr" }, v));
+        var c2 = el("td", {});
+        c2.appendChild(el("time", { datetime: rel.published_at.slice(0, 10), "data-l": "ku" }, dateKu(rel.published_at)));
+        c2.appendChild(el("time", { datetime: rel.published_at.slice(0, 10), "data-l": "en" }, dateEn(rel.published_at)));
+        var c3 = el("td", {});
+        var nk = note(rel, "name-ku") || note(rel, "name"), ne = note(rel, "name");
+        var sk = note(rel, "summary-ku") || note(rel, "summary"), se = note(rel, "summary");
+        var pk = el("span", { "data-l": "ku" }), pe = el("span", { "data-l": "en" });
+        if (nk) pk.appendChild(el("b", {}, nk + ". "));
+        if (ne) pe.appendChild(el("b", {}, ne + ". "));
+        pk.appendChild(document.createTextNode(sk ? sk + " " : ""));
+        pe.appendChild(document.createTextNode(se ? se + " " : ""));
+        pk.appendChild(el("a", { "class": "notes", href: rel.html_url }, "تێبینییەکانی وەشان"));
+        pe.appendChild(el("a", { "class": "notes", href: rel.html_url }, "Release notes"));
+        c3.appendChild(pk); c3.appendChild(pe);
+        tr.appendChild(c1); tr.appendChild(c2); tr.appendChild(c3);
+        frag.appendChild(tr);
+      });
+      body.replaceChildren(frag);
+    }
+    function setLang(l) {
+      root.setAttribute("data-ui", l); root.lang = l === "ku" ? "ckb" : "en"; root.dir = l === "ku" ? "rtl" : "ltr";
+      document.title = TITLE[l];
+      try { localStorage.setItem("agroscope-lang", l); } catch (e) {}
+      try {
+        var u = new URL(location.href);
+        if (l === "en") u.searchParams.set("lang", "en"); else u.searchParams.delete("lang");
+        history.replaceState(null, "", u.toString());
+      } catch (e) {}
+    }
+    document.getElementById("lang").addEventListener("click", function () { setLang(lang() === "ku" ? "en" : "ku"); });
+
+    fetch("https://api.github.com/repos/" + REPO + "/releases?per_page=50")
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+      .then(function (list) {
+        rels = (list || []).filter(function (x) { return !x.draft && !x.prerelease && x.published_at; })
+          .sort(function (a, b) { return b.published_at.localeCompare(a.published_at); });
+        render();
+      })
+      .catch(function () {});
+  })();
+</script>
 </body>
 </html>
