@@ -1,0 +1,10 @@
+# Static page: Netlify serves these files as they are (no build step). The program itself is NOT hosted here:
+# the download button points to the zip on this repository's GitHub Releases (no bandwidth limit there).
+[build]
+  publish = "."
+  command = ""
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
