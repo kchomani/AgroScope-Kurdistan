@@ -102,7 +102,7 @@
   }
   .download svg { width: 24px; height: 24px; flex: none; }
   .download:hover { background: var(--green-deep); color: #fff; }
-  .download[aria-disabled="true"] { background: #7c8b84; box-shadow: none; }
+  .download[aria-disabled="true"] { background: #7c8b84; box-shadow: none; cursor: default; }
   .meta { margin: 16px 0 0; font-size: 15.5px; color: var(--muted); }
   .meta a { color: var(--muted); }
   .meta a:hover { color: var(--ink); }
@@ -481,10 +481,13 @@
     function render() {
       if (!rels) return;
       var dl = document.getElementById("download");
-      if (!rels.length) {            // nothing published yet
-        dl.href = "https://github.com/" + REPO + "/releases";
-        document.getElementById("relinfo-ku").textContent = "یەکەم وەشان ئامادە دەکرێت.";
-        document.getElementById("relinfo-en").textContent = "The first version is being prepared.";
+      if (!rels.length) {            // nothing published yet: no link to an empty Releases page
+        dl.removeAttribute("href");
+        dl.setAttribute("aria-disabled", "true");
+        dl.querySelector('[data-l="ku"]').textContent = "بەم زووانە";
+        dl.querySelector('[data-l="en"]').textContent = "Coming soon";
+        document.getElementById("relinfo-ku").textContent = "یەکەم وەشان ئامادە دەکرێت و بەم زووانە لێرە دەبێت.";
+        document.getElementById("relinfo-en").textContent = "The first version is being prepared and will be here soon.";
         return;
       }
       var latest = rels[0], v0 = String(latest.tag_name || "").replace(/^v/, "");
